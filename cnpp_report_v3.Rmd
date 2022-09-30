@@ -94,6 +94,7 @@ The City provides bus passes to the non-profit organizations. Interested individ
 # Program enrollment and the options selected by enrollees
 
 Table \@ref(tab:total-enrollment) shows that a total of `r nrow(distinct(rs_bus_clean,full_name,org))` individuals belonging to `r n_distinct(rs_bus_clean$org)` non-profit organizations in the City of South Bend (City) have enrolled in the program as of `r format(max(rs_bus_clean$mnth,na.rm=T),"%B %Y")`.^[A participant is counted as enrolled if the person receives a bus pass or Uber rides for at least one month from November 2021 to the most recent data available.  The number of active enrollees each month is shown in Figure \@ref(fig:active-enrolees).] There are more enrollees selecting the bus pass + 4 Uber rides option compared to 10 Uber rides option.^[If individuals change their option across months, we consider the option that was most commonly selected.] There is some difference across organizations in terms of option selected. Organizations with five highest enrollments generally prefer bus while the rest prefer Uber.
+
 ```{r total-enrollment, echo=FALSE, cache=FALSE}
 rs_bus_clean %>% 
   distinct(full_name, org) %>%
@@ -178,7 +179,7 @@ s <- race_df %>%
 p+q+r+s + plot_layout(nrow=1)
 ```
 
-Figure \@ref(fig:demo) shows the demographic characteristics of program enrollees collected using a baseline survey given to all enrollees. All age groups are represented in the enrollees. `r percent(gender_df$prop[gender_df$Gender=="Women"])` of enrollees are women, higher than their population share in the city (53%). `r percent(income_df$prop[income_df$Income=="Less than $10,000"])` of enrollees have a annual household income of less than \$10,000.^[Unfortunately, we did not ask about the employment status of enrollees in the baseline survey. We did ask for this information during the telephonic interviews where `r percent(mean(str_detect(int_demo_df$employed,"No")))` of the respondents indicated that they are not employed (Figure \@ref(fig:demo-interviewees)). This also consistent with the fact that a majority of enrollees have annual household income of less than \$10,000.] Black or African American enrollees are `r percent(race_df$prop[race_df$Race=="Black or African American"])` of enrollees - higher than the population share in the city (25%).^[<https://www.census.gov/quickfacts/southbendcityindiana>]
+Figure \@ref(fig:demo) shows the demographic characteristics of program enrollees collected using a baseline survey given to all enrollees. All age groups are represented in the enrollees. `r percent(gender_df$prop[gender_df$Gender=="Women"])` of enrollees are women, higher than their population share in the city (53%). `r percent(income_df$prop[income_df$Income=="Less than $10,000"])` of enrollees have a annual household income of less than \$10,000.^[We did not ask about the employment status of enrollees in the baseline survey. We did ask for this information during the telephonic interviews where `r percent(mean(str_detect(int_demo_df$employed,"No")))` of the respondents indicated that they are not employed (Figure \@ref(fig:demo-interviewees)). This also consistent with the fact that a majority of enrollees have annual household income of less than \$10,000.] Black or African American enrollees are `r percent(race_df$prop[race_df$Race=="Black or African American"])` of enrollees - higher than the population share in the city (25%).^[<https://www.census.gov/quickfacts/southbendcityindiana>]
 
 
 
@@ -232,9 +233,9 @@ t <- stress_df %>%
 u+t + plot_layout(nrow=1)
 ```
 
-We study the transportation situation of the enrollees by calculating their Transportation Security Index (TSI), an index that has a value of 0-6 with the following interpretation. 0: transportation secure, 1-2:  minimally insecure, 3-4: moderately insecure, 5-6: severely insecure. Figure \@ref(fig:tsi-fig) shows the transportation situation of those enrolled in the program. Among the respondents, `r percent(sum(tsi_df_agg$prop[tsi_df_agg$TSI=="Severely Insecure" | tsi_df_agg$TSI=="Moderately Insecure"]))` are either severely or moderately insecure, and only `r percent(sum(tsi_df_agg$prop[tsi_df_agg$TSI=="Minimally Insecure" | tsi_df_agg$TSI=="Transportation Secure"]))` are minimally insecure or transportation secure.^[Previous research has found that non-White population experience the greatest transportation insecurity (@murphy2022). In Figure \@ref(fig:tsi-fig-race), we show that TSI scores for enrollees do not vary much by race. This is likely because of the self-selection nature of the program, where those who are insecure enroll in the program.]
+We determine the transportation situation of the enrollees by calculating their Transportation Security Index (TSI), an index that has a value of 0-6 with the following interpretation. 0: transportation secure, 1-2:  minimally insecure, 3-4: moderately insecure, 5-6: severely insecure (@gould2018developing). Figure \@ref(fig:tsi-fig) shows the transportation situation of those enrolled in the program as reported in the baseline survey. Among the respondents, `r percent(sum(tsi_df_agg$prop[tsi_df_agg$TSI=="Severely Insecure" | tsi_df_agg$TSI=="Moderately Insecure"]))` are either severely or moderately insecure, and only `r percent(sum(tsi_df_agg$prop[tsi_df_agg$TSI=="Minimally Insecure" | tsi_df_agg$TSI=="Transportation Secure"]))` are minimally insecure or transportation secure.^[Previous research has found that non-White population experience the greatest transportation insecurity [@murphy2022]. In Figure \@ref(fig:tsi-fig-race), we show that TSI scores for enrollees do not vary much by race. This is likely because of the self-selection nature of the program, where those who are insecure enroll in the program.]
 
-Additional evidence on the transportation situation of the enrollees is obtained by asking them about stress related to their ability to travel. Around `r percent(stress_df$prop[stress_df[,1]=="Very stressful"])` indicated that their ability to travel has been very stressful, and an additional `r percent(sum(stress_df$prop[stress_df[,1]=="More or less stressful"|stress_df[,1]=="Somewhat stressful"]))` indicated that their ability to travel has been more or less stressful or somewhat stressful. Only `r percent(stress_df$prop[stress_df[,1]=="Not stressful"])` indicated that their ability to travel has not been stressful. Thus most of the enrollees are transportation insecure and their ability to travel is stressful which suggests that the program is targeting the correct audience.
+Additional evidence on the transportation situation of the enrollees is obtained by asking them about stress related to their ability to travel in the baseline survey. Around `r percent(stress_df$prop[stress_df[,1]=="Very stressful"])` indicated that their ability to travel has been very stressful, and an additional `r percent(sum(stress_df$prop[stress_df[,1]=="More or less stressful"|stress_df[,1]=="Somewhat stressful"]))` indicated that their ability to travel has been more or less stressful or somewhat stressful. Only `r percent(stress_df$prop[stress_df[,1]=="Not stressful"])` indicated that their ability to travel has not been stressful. Thus most of the enrollees are transportation insecure and their ability to travel is stressful which suggests that the program is targeting the correct audience.
 
 ```{r,include=FALSE, cache=FALSE}
 master_data %>%
@@ -251,7 +252,7 @@ bind_rows(master_data %>%
 ```
 
 
-```{r difficult-access, echo=FALSE, message=FALSE,warning=FALSE,fig.align = "center", fig.height = 4, fig.width = 9, out.width="100%",fig.cap="Difficulty in accessing places and services", cache=TRUE}
+```{r difficult-access, echo=FALSE, message=FALSE,warning=FALSE,fig.align = "center", fig.height = 4, fig.width = 9, out.width="100%",fig.cap="Difficulty in accessing places and services", cache=FALSE}
 # prevented from achieving
 issues_df <- master_data %>%
   select(`Prevented`=`In the last 30 days, have issues with transportation prevented you from achieving any of the following?`) %>%
@@ -268,9 +269,10 @@ b <- issues_df %>%
   geom_text(aes(vjust=-0.5,label = scales::percent(prop, accuracy = 1)),size = 3)+ 
   theme_minimal() + theme(axis.title = element_blank(), legend.position = "none")+
   scale_y_continuous(labels = scales::percent_format(accuracy = 1), limits = c(0,0.65)) +
-  scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 15)) +
   labs(title="Issues with transportation prevented",
-    caption = paste0("Responses=",sum(!is.na(master_data$`In the last 30 days, have issues with transportation prevented you from achieving any of the following?`)))) 
+    caption = paste0("Responses=",sum(!is.na(master_data$`In the last 30 days, have issues with transportation prevented you from achieving any of the following?`)))) +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
 
 
 
@@ -291,6 +293,7 @@ master_data %>%
   summarise(obs=n()) %>% mutate(prop=obs/sum(!is.na(master_data$`In the last 30 days, have you NOT been able to get to any of the places below, due to a transportation issue? - Selected Choice`)))
 
 c <- unable_df %>%
+  filter(`Not able to get to`!="Other") %>% # filter other option
   #mutate(`Not able to get to`=factor(`Prevented`,levels = c("Work increased hours at a job","Obtain a new job","Keep a job","Complete a training / education program","Complete a medical treatment"))) %>%
   arrange(desc(`Not able to get to`)) %>% mutate(cum_prop=cumsum(prop)) %>%
   ggplot(aes(x=`Not able to get to`,y=prop, fill=`Not able to get to`)) + geom_bar(stat="identity", position = position_dodge()) + 
@@ -299,12 +302,13 @@ c <- unable_df %>%
   scale_y_continuous(labels = scales::percent_format(accuracy = 1), limits = c(0,0.65)) +
   scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) +
   labs(title="Unable to get to",
-       caption = paste0("Responses=",sum(!is.na(master_data$`In the last 30 days, have you NOT been able to get to any of the places below, due to a transportation issue? - Selected Choice`))))
+       caption = paste0("Responses=",sum(!is.na(master_data$`In the last 30 days, have you NOT been able to get to any of the places below, due to a transportation issue? - Selected Choice`))))+
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.8))
 
 b+c + plot_layout(nrow=1)
 ```
 
-Figure \@ref(fig:difficult-access) shows the places and services that enrollees had difficulty accessing due to transportation constraints. A majority of enrollees (`r percent(issues_df$prop[issues_df$Prevented=="Complete a medical treatment"])`) reported that transportation issues prevented them from completing medical treatment. A significant proportion of enrollees also reported that they were unable to get to the grocery store or food bank (`r percent(unable_df$prop[unable_df[,1]=="Grocery store or food bank"])`), medical appointment (`r percent(unable_df$prop[unable_df[,1]=="Medical appointment"])`), or work/ job fair (`r percent(unable_df$prop[unable_df[,1]=="Work or a job fair / interview"])`).
+Figure \@ref(fig:difficult-access) shows the places and services that enrollees had difficulty accessing due to transportation constraints as reported in the baseline survey. A majority of enrollees (`r percent(issues_df$prop[issues_df$Prevented=="Complete a medical treatment"])`) reported that transportation issues prevented them from completing medical treatment. A significant proportion of enrollees also reported that they were unable to get to the grocery store or food bank (`r percent(unable_df$prop[unable_df[,1]=="Grocery store or food bank"])`), medical appointment (`r percent(unable_df$prop[unable_df[,1]=="Medical appointment"])`), or work/ job fair (`r percent(unable_df$prop[unable_df[,1]=="Work or a job fair / interview"])`).
 
 \newpage
 
@@ -329,13 +333,13 @@ uber_fig <- Uber_CNPP %>%
   gather(key,value,-mnth) %>%
   ggplot(aes(x=mnth,y=value, fill=key)) +
   geom_bar(stat="identity") + theme_minimal() +
-  theme(legend.title = element_blank(), axis.title = element_blank(), legend.position = "bottom") +
-  geom_text(aes(y=0,label = rep(round(a,0),2)), vjust = -0.2)+
-  scale_x_date(labels = date_format("%b-%y")) + scale_y_continuous(limits = c(-100,2000), breaks = seq(-400,2000,400)) + 
+  theme(legend.title = element_blank(), axis.title.x = element_blank(),legend.position = "bottom") +
+  geom_line(aes(y=rep(round(a,0),2)*100), color="red") + geom_text(aes(y=rep(round(a,0),2)*100,label = rep(round(a,0),2)), vjust = -0.2)+ 
+  scale_x_date(labels = date_format("%b-%y")) + scale_y_continuous(limits = c(-100,2200), breaks = seq(-400,2200,400), name="Number of rides or \nriders",
+                                                                   sec.axis = sec_axis( trans=~./100)) + 
   labs(title="Rideshare usage",
-       caption = paste0("Average rides per rider is shown at base of the bars","\n",
-         "Total rides = ",formatC(nrow(Uber_CNPP), format="f", big.mark=",", digits=0),"\n",
-         "Total unique riders=",formatC(n_distinct(Uber_CNPP$`Full Name`, format="f", big.mark=",", digits=0)),"\n"))
+       caption = paste0("Average rides per rider shown in line graph","\n",
+                        "Total rides = ",formatC(nrow(Uber_CNPP), format="f", big.mark=",", digits=0),", Total unique riders=",formatC(n_distinct(Uber_CNPP$`Full Name`, format="f", big.mark=",", digits=0)),"\n"))
 
 bus_rides_may <- read_excel("data/ride data/Buspass data 05_22.xlsx", 
                                 sheet = "Rides")%>%
@@ -364,19 +368,19 @@ bus_fig <- bus_rides_df %>%
   gather(key,value,-mnth) %>%
   ggplot(aes(x=mnth,y=value, fill=key)) +
   geom_bar(stat="identity")+ theme_minimal()+ 
-  theme(legend.title = element_blank(), axis.title = element_blank(), legend.position = "bottom") +
-  geom_text(aes(y=0,label = rep(round(b,0),2)), vjust = -0.2)+
-  scale_x_date(labels = date_format("%b-%y"))  + scale_y_continuous(limits = c(-100,2000), breaks = seq(-400,2000,400)) +
+  theme(legend.title = element_blank(), axis.title.x = element_blank(),legend.position = "bottom") +
+  geom_line(aes(y=rep(round(b,0),2)*100), color="red") + geom_text(aes(y=rep(round(b,0),2)*100,label = rep(round(b,0),2)), vjust = -0.2)+ 
+  scale_x_date(labels = date_format("%b-%y"))  + scale_y_continuous(limits = c(-100,2200), breaks = seq(-400,2000,400),
+                                                                   sec.axis = sec_axis( trans=~./100, name="Average rides per user")) + 
   labs(title="Bus pass usage",
-       caption = paste0("Average rides per rider is shown at base of the bars","\n",
-                        "Total rides=",formatC(nrow(bus_rides_df), format="f", big.mark=",", digits=0),"\n",
-                        "Total unique riders=",formatC(n_distinct(bus_rides_df$Pass), format="f", big.mark=",", digits=0)))
+       caption = paste0("Average rides per rider is shown in line graph","\n",
+                        "Total rides=",formatC(nrow(bus_rides_df), format="f", big.mark=",", digits=0), ", Total unique riders=",formatC(n_distinct(bus_rides_df$Pass), format="f", big.mark=",", digits=0)))
 
 uber_fig+bus_fig + plot_layout(nrow=1)
 
 ```
 
-Figure \@ref(fig:uber-bus-rides) shows the number of rides and users for uber and bus services. The program usage (the number of Uber and bus rides) has been increasing which is likely driven by higher enrollments in later months. The average number of rides per user is about 6-8 (shown at the base of the bars). Although there are fewer bus users  (Figure \@ref(fig:active-enrolees)), more bus rides are being used than Uber. This is consistent with observations from Goodwill in the previous evaluation. The average rides per user is also higher at around 18 for the most recent 3 months (shown at the base of the bars).
+Figure \@ref(fig:uber-bus-rides) shows the number of rides and users for uber and bus services. The program usage (the number of Uber and bus rides) has been increasing which is likely driven by higher enrollments in later months. The average number of rides per user is about 6-8 (shown at the base of the bars). Although there are fewer bus users  (Figure \@ref(fig:active-enrolees)), more bus rides are being used than Uber. Similar finding was reported in the evaulation of the work-travel subsidy program [@motghare2021]. The average number of bus rides per user is also higher (shown in the line graph).
 
 # Survey Analysis
 
@@ -433,14 +437,16 @@ uber_rides_use <- bind_rows(
   summarise(obs=n()) %>% mutate(prop=obs/tot_resp)
 
 a <- uber_rides_use  %>%
+  filter(uber_rides_use_1!="Other") %>% # remove other responses
   arrange(desc(uber_rides_use_1)) %>% mutate(cum_prop=cumsum(prop)) %>%
   ggplot(aes(x=uber_rides_use_1,y=prop, fill=uber_rides_use_1)) + geom_bar(stat="identity", position = position_dodge()) + 
   geom_text(aes(vjust=-0.5,label = scales::percent(prop, accuracy = 1)),size = 3)+ 
   theme_minimal() + theme(axis.title = element_blank(), legend.position = "none")+
-  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1), limits = c(0,0.53)) +
   scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) +
   labs(title="Used Uber rides to get to",
-       caption = paste0("Responses=",tot_resp,"\n","Most recent survey=",recent_date))
+       caption = paste0("Responses=",tot_resp,"\n","Most recent survey=",recent_date))+
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.8))
 
 
 # what would have happened if rides werent available?
@@ -456,6 +462,7 @@ rides_unavailable_df <- bind_rows(
                                            ifelse(rides_unavailable=="Hubiera pagado el precio complete para llegar a estos lugares usando Uber, Lyft, o un taxi.","I would have paid full price to get to  using Uber, Lyft or a taxi",NA))))
   
 )%>% # ,rides_use_2=23
+  mutate(rides_unavailable=ifelse(rides_unavailable=="I would have gotten to most of these places another way (such as the bus, ride from someone, walk, bike)","I would have gotten to most of these places another way",rides_unavailable)) %>%
   group_by(rides_unavailable) %>% summarise(obs=n()) %>% mutate(prop=obs/sum(obs)) %>%
   filter(!is.na(rides_unavailable))
 
@@ -476,7 +483,7 @@ a+b
 
 A survey is given to all those who have used at least one Uber ride in the past week asking about the places visited using the rides and what would have happened in absence of the rides.  We are interested in knowing the places the rides were used to reach and the counterfactual scenario (when rides were not available) which may be used to estimate the cost savings for the enrollees.
 
-Figure \@ref(fig:weekly-survey) shows that a large majority of users used the rides to get to a medical appointment (`r percent(uber_rides_use$prop[unable_df[,1]=="Medical appointment"])`), and grocery store or food bank (`r percent(uber_rides_use$prop[unable_df[,1]=="Grocery store or food bank"])`), and work or a job fair/interview (`r percent(uber_rides_use$prop[unable_df[,1]=="Work or a job fair / interview"])`). This is consistent with the responses in the baseline survey responses (Figure \@ref(fig:difficult-access)) where these places and services are the same that enrollees had difficulty accessing due to transportation constraints. So the rides seem to be relaxing these constraints. This should also allay concerns about rides being used for non-essential purposes.
+Figure \@ref(fig:weekly-survey) shows that a large majority of users used the rides to get to a medical appointment (`r percent(uber_rides_use$prop[unable_df[,1]=="Medical appointment"])`), work or a job fair/interview (`r percent(uber_rides_use$prop[unable_df[,1]=="Work or a job fair / interview"])`), and grocery store or food bank (`r percent(uber_rides_use$prop[unable_df[,1]=="Grocery store or food bank"])`). This is consistent with the responses from the baseline survey (Figure \@ref(fig:difficult-access)). These places and services are the same that enrollees had difficulty accessing due to transportation constraints. So the rides seem to be relaxing these constraints. This should also allay concerns about rides being used for non-essential purposes.
 
 Figure \@ref(fig:weekly-survey) shows that `r percent(rides_unavailable_df$prop[rides_unavailable_df$rides_unavailable=="I would NOT have been able to get to most of these places"])` respondents indicated that in absence of Uber rides, they would have been unable to get to places they needed to go. Thus, the program enabled individuals to go to places they wouldn't have gotten to otherwise. Also, that the program works as a compliment to existing modes without crowding out existing modes of transport.
 
@@ -759,8 +766,6 @@ a column separator -->
     The CNPP program and the work-travel subsidy program differs in terms of their target population and intended use od the rides.
     
     Those enrolled in the work-travel subsidy program are workers who have regular employment and the rides are intended to be used to travel to and from work. While those enrolled in the CNPP program are individuals working with social services providers and the rides are not restrcited by location. Taken together, both programs complement each other by targeting different populations and intended use. Additionally, the CNPP program reduces the burden of providing transportation for the nonprofits themselves, helping them focus on other issues.
-    
-    
 
 ## Recommendations
 1. The program may not solve all the problems, but it does go a long way.
