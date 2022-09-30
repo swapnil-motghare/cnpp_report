@@ -1,0 +1,856 @@
+---
+title: "| Impact Evaluation of Community Nonprofit Partner Program - South Bend’s Mayors Challenge \n\nFinal Report \\vspace{1in}"
+subtitle: "| Submitted to: \nFernanda Borges Nogueira  \nDelivery Associates  \nWashington DC \\vspace{1in}"
+author: "Submitted by:  \nSwapnil Motghare, Danice Brown Guzmán  \nUniversity of Notre Dame \\vspace{1in}"
+date: "September 2022"
+output:
+  bookdown::pdf_document2:
+    latex_engine: xelatex
+    fig_crop: no
+    toc: true
+    toc_depth: 3
+    includes:
+      in_header: columns.tex
+      before_body: latex/before_body.tex
+      after_body: latex/after_body.tex
+mainfont: Garamond
+bibliography: references.bib
+link-citations: true
+---
+
+```{r setup, include=FALSE, cache=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(readxl)
+library(lubridate)
+library(knitr)
+library(patchwork)
+library(scales)
+library(treemapify)
+library(scales)
+library(kableExtra)
+
+master_data <- read_rds("data/master_data.Rds")
+rs_bus_clean <- read_rds("data/rs_bus_clean.Rds")
+total_seats <- read_excel("data/total_seats.xlsx")
+
+org_user_type <- rs_bus_clean %>%
+  group_by(full_name, org,mnth) %>%
+  summarise(uber_user=ifelse(any(!is.na(rs_voucher)),1,0),
+            bus_user=ifelse(any(!is.na(bus_pass_no)),1,0)) %>%
+  mutate(user_type=ifelse(uber_user+bus_user==2,"both user",
+                ifelse(uber_user==1,"uber user","bus user"))) %>%
+  ungroup() %>%
+  group_by(full_name,user_type) %>%
+  summarise(obs=n()) %>% arrange(desc(obs)) %>% slice(1)
+```
+
+\newpage
+
+# Acknowledgements {-}
+We would like to thank Lynn Wetzel, Fernanda Borges Nogueira, Calla Norman, Matthew Barlow, Egla Bregu, Raphael Adeyemi, and Jamison Edwards for providing data and valuable feedback while writing this report.
+
+\newpage
+
+# Executive Summary {-}
+The City of South Bend launched the Community Nonprofit Partner Program (CNPP) in October 2021. The program provides free transportation benefits in the form of bus passes and rideshare rides to individuals working with 13 nonprofit social services providers in South Bend. The Lucy Family Institute for Data & Society at the University of Notre Dame partnered with the City to do an impact evaluation of the program to study the program's impact on participants and the broader community. 
+
+Through a combination of quantitative and qualitative approaches, this report presents the findings of the evaluation which are summarized below.
+
+1. The CNPP program is serving an especially vulnerable population 
+2. The program helps alleviate stress related to transportation
+3. The program improves access to critical services such as healthcare, education, and food
+
+\newpage
+
+# Background
+Lack of reliable transportation is a primary barrier to employment for 1 of 3 low-income workers in South Bend (@unknown-author-2016). The City of South Bend (City) has been working to reduce this barrier by providing reliable transportation options to its residents. In 2018, the City was awarded a three-year, $1 million grant from Bloomberg Philanthropies to develop a transportation-as-a-benefit program to address this issue. The City decided to explore a model that, instead of substituting the regular mode of transportation, helps when the regular mode becomes unavailable - an “insurance” for situations when your regular mode of transportation breaks down (e.g. when a shared household car is unavailable at the required time, or to reach workplace outside of bus operating hours.). The program was not intended or designed to solve chronic transportation problems.
+
+## Work-travel subsidy program
+The City has implemented different versions of the program at different points in time starting 2019. These involved giving discounted rideshare rides and free bus passes to program enrollees at select local employers. While there are cases of an employer providing public transport passes to employees, the Lyft/Uber rides subsidy is a novelty; as is the objective to solve short periods of transportation problems through a transportation-as-a-benefit model. A distinguishing characteristic of the program is that this is trying to solve a problem using existing transportation options in the market (rather than new public investment). Few findings from the previous impact evaluation of these versions were (i) women were more likely to enroll and use in the program, (ii) the program helps reduce stress related to transportation, and (iii) the program results in savings for the enrollees in form of reduced transportation costs.
+
+## Commuters Trust Community Nonprofit Partner Program 
+Armed with learnings from the previous versions of the program, the City launched the Commuters Trust Community Nonprofit Partner Program (CNPP) in October 2021. The program provides free transportation benefits in the form of bus passes and rideshare rides to workers working with 13 social service providers in South Bend. These organizations provide a variety of housing, education, job training, healthcare, and other essential services aimed at alleviating poverty or disability. The program is being jointly funded by the City and United Way of St. Joseph County, and is expected to continue through 2022.
+
+The Lucy Family Institute for Data & Society at the University of Notre Dame partnered with the City to do an impact evaluation of the CNPP program to study the program's impact on participants and the broader community. The presents the findings of the evaluation. The focus of the evaluation is to study the program’s impact on multiple outcomes including users’ transportation security, stress related to transportation, and access to critical services such as healthcare, education, and food. The evaluation was performed using a combination of quantitative and qualitative approaches.
+
+Scope of the report: In this report, we study the program impacts of the CNPP program, focusing on 13 social service providers located in South Bend, Indiana.
+
+Report structure: We first explain the program design. We then study the demographics of program enrollees and their transportation situation using responses on the baseline survey. The main question that drives the analysis is: Who enrolls in the program and what are the transportation needs of the enroleess? In the next section, we study the program usage by looking at the options selected by enrolees, number of rides taken and places the rides were used to get to. We also study the effect of transportation security index of enrolees, six months after enrolling in the program. Next, we discuss the findings from the qualitative analysis based on the personal interviews. We conclude the report by giving recommendations about how the program may be continued in the future.
+
+## Program Design
+
+The program enrollees can choose between two benefit packages: 
+1. 4 free Uber rides per month + unlimited monthly Transpo bus pass (digital or physical card), and 
+2. 10 free Uber rides per month .^[More details on the options provided are here: https://www.commuterstrust.com/partner]
+
+## Report Structure
+We first study the demographics of enrollees and their transportation situation, followed by program usage and effect of transportation security of enrolees. The data for this analysis was collected using baseline, weekly and monthly surveys. We then present the findings from the telephonic interviews conducted with program enroleess. We conclude the report by giving recommendations about how the program may be continued in the future.
+
+
+\newpage
+
+# Program enrollment
+
+Table \@ref(tab:total-enrollment) shows that a total of `r nrow(distinct(rs_bus_clean,full_name,org))` individuals belonging to `r n_distinct(rs_bus_clean$org)` non-profit organizations in the City of South Bend (City) have enrolled in the program as of `r format(max(rs_bus_clean$mnth,na.rm=T),"%B %Y")`.^[A participant is counted as enrolled if the person receives a bus pass or Uber rides for at least one month from November 2021 to the most recent data available. The total enrollments can be higher than total seats if there is churn among the enrolees. The number of active enrolees each month is shown in Figure \@ref(fig:active-enrolees).]
+
+There are equal number of Uber and Bus users.
+
+```{r total-enrollment, echo=FALSE, cache=FALSE}
+rs_bus_clean %>% 
+  distinct(full_name, org) %>%
+  left_join(org_user_type, by="full_name") %>%
+  group_by(`Name of participating organization`=org) %>%
+  summarise(`Total enrollments`=n_distinct(full_name), `Uber users`=sum(user_type=="uber user"), `Bus users`=sum(user_type=="bus user"), `Both users`=sum(user_type=="both user")) %>%
+  arrange(desc(`Total enrollments`)) %>% 
+  left_join(total_seats, by=c(`Name of participating organization`="org"))%>%
+  add_row(`Name of participating organization`="",`Total enrollments`=sum(.$`Total enrollments`),
+          `Uber users`=sum(.$`Uber users`),`Bus users`=sum(.$`Bus users`),`Both users`=sum(.$`Both users`),`Total seats`=sum(.$`Total seats`)) %>%
+  kable(caption = "Total enrollments in the program")%>%
+  kable_styling(latex_options = "HOLD_position")
+```
+
+```{r demo, echo=FALSE, fig.align = "center", fig.height = 4, fig.width = 11, out.width="100%",fig.cap="Demographics of Enrolees", cache=TRUE}
+age_df <- master_data %>%
+  group_by(Age=`Please indicate your age.`) %>%
+  filter(!is.na(Age)) %>%
+  summarise(obs=n()) %>% mutate(prop=obs/sum(obs)) 
+
+p <- age_df %>%
+  mutate(Age=factor(Age,levels = c("65 or older","55-64","45-54","35-44","25-34","18-24","Under 18"))) %>%
+  arrange(desc(Age)) %>%
+  mutate(cum_prop=cumsum(prop)) %>%
+  ggplot(aes(x=1,y=prop, fill=Age)) + geom_bar(stat="identity") + 
+  geom_text(aes(x=1,y=cum_prop-prop/2,label = scales::percent(prop, accuracy = 1)),size = 3)+ 
+  theme_minimal() + theme(axis.title = element_blank(), axis.text = element_blank()) +
+  labs(caption = paste0("Responses=",sum(!is.na(master_data$`Please indicate your age.`))))
+
+gender_df <- master_data %>%
+  group_by(Gender=`Please indicate your gender.`) %>%
+  mutate(Gender=ifelse(Gender=="Male","Men",
+                       ifelse(Gender=="Female","Women",Gender))) %>%
+  filter(!is.na(Gender)) %>%
+  summarise(obs=n()) %>% mutate(prop=obs/sum(obs))
+
+q <- gender_df %>% 
+  mutate(Gender=factor(Gender,levels = c("Women","Men","Non-binary"))) %>% arrange(desc(Gender)) %>% mutate(cum_prop=cumsum(prop)) %>%
+  ggplot(aes(x=1,y=prop, fill=Gender)) + geom_bar(stat="identity") +
+  geom_text(aes(x=1,y=cum_prop-prop/2,label = scales::percent(prop, accuracy = 1)),size = 3)+ 
+  theme_minimal() + theme(axis.title = element_blank(), axis.text = element_blank())+
+  labs(caption = paste0("Responses=",sum(!is.na(master_data$`Please indicate your gender.`))))
+
+income_df <- master_data %>%
+  mutate(`Was your total household income in the past 12 months?`=ifelse(`Was your total household income in the past 12 months?`=="$10,000 - $19,000","$10,000 - $19,999",`Was your total household income in the past 12 months?`)) %>%
+  mutate(Income=ifelse(`Was your total household income in the past 12 months?`=="Less than $10,000" | 
+                         `Was your total household income in the past 12 months?`=="$10,000 - $19,999" |
+                         `Was your total household income in the past 12 months?`=="$20,000 - $29,999" |
+                         `Was your total household income in the past 12 months?`=="$30,000 - $39,999",
+                       `Was your total household income in the past 12 months?`,"$40,000+")) %>%
+  group_by(Income)  %>%
+  filter(!is.na(Income)) %>%
+  summarise(obs=n()) %>% mutate(prop=obs/sum(obs))
+
+r <- income_df %>%
+  mutate(Income=factor(Income,levels = c("$40,000+","$30,000 - $39,999","$20,000 - $29,999","$10,000 - $19,999","Less than $10,000"))) %>%
+  arrange(desc(Income)) %>% mutate(cum_prop=cumsum(prop)) %>%
+  ggplot(aes(x=1,y=prop, fill=Income)) + geom_bar(stat="identity") + 
+  geom_text(aes(x=1,y=cum_prop-prop/2,label = scales::percent(prop, accuracy = 1)),size = 3)+ 
+  theme_minimal() + theme(axis.title = element_blank(), axis.text = element_blank())+
+  labs(caption = paste0("Responses=",sum(!is.na(master_data$`Was your total household income in the past 12 months?`))))
+
+race_df <- master_data %>%
+  group_by(Race=`Which of the following best describes you?`)  %>%
+  filter(!is.na(Race)) %>%
+  summarise(obs=n()) %>% mutate(prop=obs/sum(obs))
+
+s <- race_df %>%
+  mutate(Race=factor(Race,levels = c("A race/ethnicity not listed here","Native American or Alaskan Native","Asian or Pacific Islander","Multiracial or Biracial","Hispanic or Latino","White or Caucasian","Black or African American"))) %>%
+  arrange(desc(Race)) %>% mutate(cum_prop=cumsum(prop)) %>%
+  ggplot(aes(x=1,y=prop, fill=Race)) + geom_bar(stat="identity") + 
+  geom_text(aes(x=1,y=cum_prop-prop/2,label = scales::percent(prop, accuracy = 1)),size = 3)+ 
+  theme_minimal() + theme(axis.title = element_blank(), axis.text = element_blank())+
+  labs(caption = paste0("Responses=",sum(!is.na(master_data$`Which of the following best describes you?`))))
+
+
+p+q+r+s + plot_layout(nrow=1)
+```
+
+Figure \@ref(fig:demo) shows the demographic characteristics of program enrollees collected using a baseline survey given to all enrollees. All age groups are represented in the enrollees. `r percent(gender_df$prop[gender_df$Gender=="Women"])` of enrollees are women, higher than their population share in the city (53%). `r percent(income_df$prop[income_df$Income=="Less than $10,000"])` of enrollees have a household income of less than 10,000. Black or African American enrollees are `r percent(race_df$prop[race_df$Race=="Black or African American"])` of enrollees - higher than the population share in the city (25%).^[<https://www.census.gov/quickfacts/southbendcityindiana>]
+
+
+
+```{r tsi-fig, echo=FALSE, fig.align = "center", fig.height = 4, fig.width = 8, out.width="70%",fig.cap="Transportation Situation of Enrolees",cache=TRUE}
+# TSI scores for enrolled users
+tsi_df <- master_data %>%
+  select(Race=`Which of the following best describes you?`,contains("TSI")) %>%
+  mutate(TSI1=ifelse(TSI1=="Never",0,
+                     ifelse(TSI1=="Sometimes",1,
+                            ifelse(TSI1=="Often",2,NA))),
+         TSI2=ifelse(TSI2=="Never",0,
+                     ifelse(TSI2=="Sometimes",1,
+                            ifelse(TSI2=="Often",2,NA))),
+         TSI3=ifelse(TSI3=="Never",0,
+                     ifelse(TSI3=="Sometimes",1,
+                            ifelse(TSI3=="Often",2,NA))),
+         TSI_score=TSI1+TSI2+TSI3,
+         TSI_category=ifelse(TSI_score==0,"Transportation Secure",
+                             ifelse(TSI_score<=2,"Minimally Insecure",
+                                    ifelse(TSI_score<=4,"Moderately Insecure",
+                                           ifelse(TSI_score<=6,"Severely Insecure",NA))))) 
+
+tsi_df_agg <- tsi_df %>%
+  group_by(TSI=TSI_category) %>%
+  filter(!is.na(TSI)) %>%
+  summarise(obs=n()) %>% mutate(prop=obs/sum(obs))
+
+u <- tsi_df_agg %>%
+  mutate(TSI=factor(TSI,levels = c("Severely Insecure","Moderately Insecure","Minimally Insecure","Transportation Secure"))) %>%
+  arrange(desc(TSI)) %>%
+  mutate(cum_prop=cumsum(prop)) %>%
+  ggplot(aes(x=1,y=prop, fill=TSI)) + geom_bar(stat="identity") + 
+  geom_text(aes(x=1,y=cum_prop-prop/2,label = scales::percent(prop, accuracy = 1)),size = 3)+ 
+  theme_minimal() + theme(axis.title = element_blank(), axis.text = element_blank()) +
+  labs(caption = paste0("Responses=",sum(!is.na(tsi_df$`TSI_category`))))
+
+stress_df <- master_data %>%
+  group_by(`Ability to Travel`=`In the past 30 days, my ability to travel around has been...`) %>%
+  filter(!is.na(`Ability to Travel`)) %>%
+  summarise(obs=n()) %>% mutate(prop=obs/sum(obs))
+
+t <- stress_df %>%
+  mutate(`Ability to Travel`=factor(`Ability to Travel`,levels=c("Very stressful","More or less stressful","Somewhat stressful","Not stressful"))) %>%
+  arrange(desc(`Ability to Travel`)) %>% mutate(cum_prop=cumsum(prop)) %>%
+  ggplot(aes(x=1,y=prop, fill=`Ability to Travel`)) + geom_bar(stat="identity") + 
+  geom_text(aes(x=1,y=cum_prop-prop/2,label = scales::percent(prop, accuracy = 1)),size = 3)+ 
+  theme_minimal() + theme(axis.title = element_blank(), axis.text = element_blank())+
+  labs(caption = paste0("Responses=",sum(!is.na(master_data$`In the past 30 days, my ability to travel around has been...`))))
+
+u+t + plot_layout(nrow=1)
+```
+
+We study the transportation situation of the enrollees by calculating their Transportation Security Index (TSI), an index that has a value of 0-6 with the following interpretation. 0: transportation secure, 1-2:  minimally insecure, 3-4: moderately insecure, 5-6: severely insecure. Figure \@ref(fig:tsi-fig) shows the transportation situation of those enrolled in the program. Among the respondents, `r percent(sum(tsi_df_agg$prop[tsi_df_agg$TSI=="Severely Insecure" | tsi_df_agg$TSI=="Moderately Insecure"]))` are either severely or moderately insecure, and only `r percent(sum(tsi_df_agg$prop[tsi_df_agg$TSI=="Minimally Insecure" | tsi_df_agg$TSI=="Transportation Secure"]))` are minimally insecure or transportation secure.^[In Figure \@ref(fig:tsi-fig-race), we show that TSI scores do not vary much by race. Previous research has found that non-White population experience the greatest transportation insecurity (@murphy2022). This is likely because of the self-selection nature of the program, where those who are insecure enroll in the program.]
+
+Additional evidence on the transportation situation of the enrollees is obtained by asking them about stress related to their ability to travel. Around `r percent(stress_df$prop[stress_df[,1]=="Very stressful"])` indicated that their ability to travel has been very stressful, and an additional `r percent(sum(stress_df$prop[stress_df[,1]=="More or less stressful"|stress_df[,1]=="Somewhat stressful"]))` indicated that their ability to travel has been more or less stressful or somewhat stressful. Only `r percent(stress_df$prop[stress_df[,1]=="Not stressful"])` indicated that their ability to travel has not been stressful. Thus most of the enrollees are transportation insecure and their ability to travel is stressful which suggests that the program is targeting the correct audience.
+
+```{r,include=FALSE, cache=FALSE}
+master_data %>%
+  select(`Prevented`=`In the last 30 days, have issues with transportation prevented you from achieving any of the following?`) %>%
+  separate(`Prevented`,into=c("a","b","c","d","e","f","g"), sep = ",") %>%
+  filter(!is.na(g)) # should be zero which means all categories heve been counted
+  
+bind_rows(master_data %>%
+            select(`Not able to get to`=`In the last 30 days, have you NOT been able to get to any of the places below, due to a transportation issue? - Selected Choice`),
+          master_data %>%
+            select(`Not able to get to`=`In the last 30 days, have you NOT been able to get to any of the places below, due to a transportation issue? - Other - Text`))%>%
+  separate(`Not able to get to`,into=c("a","b","c","d","e","f","g","h","i"), sep = ",") %>%
+  filter(!is.na(i))
+```
+
+
+```{r difficult-access, echo=FALSE, message=FALSE,warning=FALSE,fig.align = "center", fig.height = 4, fig.width = 9, out.width="100%",fig.cap="Difficulty in accessing places and services", cache=TRUE}
+# prevented from achieving
+issues_df <- master_data %>%
+  select(`Prevented`=`In the last 30 days, have issues with transportation prevented you from achieving any of the following?`) %>%
+  separate(`Prevented`,into=c("a","b","c","d","e","f","g"), sep = ",") %>%
+  gather(key,`Prevented`) %>% 
+  group_by(`Prevented`) %>%
+  filter(!is.na(`Prevented`), `Prevented`!="None of the above") %>%
+  summarise(obs=n()) %>% mutate(prop=obs/sum(!is.na(master_data$`In the last 30 days, have issues with transportation prevented you from achieving any of the following?`)))
+
+b <- issues_df %>%
+  mutate(`Prevented`=factor(`Prevented`,levels = c("Work increased hours at a job","Obtain a new job","Keep a job","Complete a training / education program","Complete a medical treatment"))) %>%
+  arrange(desc(`Prevented`)) %>% mutate(cum_prop=cumsum(prop)) %>%
+  ggplot(aes(x=`Prevented`,y=prop, fill=`Prevented`)) + geom_bar(stat="identity", position = position_dodge()) + 
+  geom_text(aes(vjust=-0.5,label = scales::percent(prop, accuracy = 1)),size = 3)+ 
+  theme_minimal() + theme(axis.title = element_blank(), legend.position = "none")+
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1), limits = c(0,0.65)) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) +
+  labs(title="Issues with transportation prevented",
+    caption = paste0("Responses=",sum(!is.na(master_data$`In the last 30 days, have issues with transportation prevented you from achieving any of the following?`)))) 
+
+
+
+# not been able to get to these places #
+unable_df <- bind_rows(master_data %>%
+  select(`Not able to get to`=`In the last 30 days, have you NOT been able to get to any of the places below, due to a transportation issue? - Selected Choice`),
+master_data %>%
+  select(`Not able to get to`=`In the last 30 days, have you NOT been able to get to any of the places below, due to a transportation issue? - Other - Text`))%>%
+  separate(`Not able to get to`,into=c("a","b","c","d","e","f","g","h","i"), sep = ",") %>%
+  gather(key,`Not able to get to`) %>% 
+  mutate(`Not able to get to`=ifelse(`Not able to get to`=="Work or a job fair/interview","Work or a job fair / interview",`Not able to get to`)) %>% # fix small inconsistency in options for cleaner bar plot
+  mutate(`Not able to get to`=ifelse(`Not able to get to`!="Childcare facility" & `Not able to get to`!="Grocery store or food bank" & 
+                                       `Not able to get to`!="Medical appointment" & `Not able to get to`!="Non-medical appointment" &
+                                       `Not able to get to`!="Training / school / education" & `Not able to get to`!="Work or a job fair / interview",
+                                     "Other",`Not able to get to`)) %>%
+  group_by(`Not able to get to`) %>%
+  filter(!is.na(`Not able to get to`)) %>%
+  summarise(obs=n()) %>% mutate(prop=obs/sum(!is.na(master_data$`In the last 30 days, have you NOT been able to get to any of the places below, due to a transportation issue? - Selected Choice`)))
+
+c <- unable_df %>%
+  #mutate(`Not able to get to`=factor(`Prevented`,levels = c("Work increased hours at a job","Obtain a new job","Keep a job","Complete a training / education program","Complete a medical treatment"))) %>%
+  arrange(desc(`Not able to get to`)) %>% mutate(cum_prop=cumsum(prop)) %>%
+  ggplot(aes(x=`Not able to get to`,y=prop, fill=`Not able to get to`)) + geom_bar(stat="identity", position = position_dodge()) + 
+  geom_text(aes(vjust=-0.5,label = scales::percent(prop, accuracy = 1)),size = 3)+ 
+  theme_minimal() + theme(axis.title = element_blank(), legend.position = "none")+
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1), limits = c(0,0.65)) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) +
+  labs(title="Unable to get to",
+       caption = paste0("Responses=",sum(!is.na(master_data$`In the last 30 days, have you NOT been able to get to any of the places below, due to a transportation issue? - Selected Choice`))))
+
+b+c + plot_layout(nrow=1)
+```
+
+Figure \@ref(fig:difficult-access) shows the places and services that enrollees had difficulty accessing due to transportation constraints. A majority of enrollees (`r percent(issues_df$prop[issues_df$Prevented=="Complete a medical treatment"])`) reported that transportation issues prevented them from completing medical treatment. A significant proportion of enrollees also reported that they were unable to get to the grocery store or food bank (`r percent(unable_df$prop[unable_df[,1]=="Grocery store or food bank"])`), medical appointment (`r percent(unable_df$prop[unable_df[,1]=="Medical appointment"])`), or work/ job fair (`r percent(unable_df$prop[unable_df[,1]=="Work or a job fair / interview"])`).
+
+\newpage
+
+# Program usage
+
+```{r uber-bus-rides, echo=FALSE, message=FALSE,warning=FALSE,fig.align = "center", fig.height = 4, fig.width = 9, out.width="100%",fig.cap="Rides and riders by month", cache=TRUE}
+Uber_CNPP <- read_excel("data/ride data/Uber CNPP.xlsx", 
+                        sheet = "CNPP Rides")
+
+# average rides
+a <- Uber_CNPP %>%
+  group_by(mnth=as.Date(floor_date(`Request Date (UTC)`, unit="month"))) %>%
+  summarise(total_uber_rides=n(),total_uber_riders=n_distinct(`Full Name`)) %>%
+  filter(mnth>="2021-10-01", mnth<="2022-08-01") %>%
+  mutate(avg_rides_per_user=total_uber_rides/total_uber_riders) %>% .$avg_rides_per_user
+  
+# rides, riders, average rides per rider
+uber_fig <- Uber_CNPP %>%
+  group_by(mnth=as.Date(floor_date(`Request Date (UTC)`, unit="month"))) %>%
+  summarise(`Total rides`=n(), `Total riders`=-1*n_distinct(`Full Name`)) %>%
+  filter(mnth>="2021-10-01", mnth<="2022-08-01") %>%
+  gather(key,value,-mnth) %>%
+  ggplot(aes(x=mnth,y=value, fill=key)) +
+  geom_bar(stat="identity") + theme_minimal() +
+  theme(legend.title = element_blank(), axis.title = element_blank(), legend.position = "bottom") +
+  geom_text(aes(y=0,label = rep(round(a,0),2)), vjust = -0.2)+
+  scale_x_date(labels = date_format("%b-%y")) + scale_y_continuous(limits = c(-100,2000), breaks = seq(-400,2000,400)) + 
+  labs(title="Rideshare usage",
+       caption = paste0("Average rides per rider is shown at base of the bars","\n",
+         "Total rides = ",formatC(nrow(Uber_CNPP), format="f", big.mark=",", digits=0),"\n",
+         "Total unique riders=",formatC(n_distinct(Uber_CNPP$`Full Name`, format="f", big.mark=",", digits=0)),"\n"))
+
+bus_rides_may <- read_excel("data/ride data/Buspass data 05_22.xlsx", 
+                                sheet = "Rides")%>%
+  filter(Organization=="CNPP")
+# rides after May 2022
+bus_rides_june_aug <- lapply(seq(6,8), function(x) {
+  read_excel(paste0("data/ride data/Transpo_0",x,"22.xlsx"), 
+             sheet = paste0(month.name[x]," Rides")) %>% mutate(Month=my(paste(month.name[x],"-22"))) %>%
+    filter(!str_detect(Organization,"Goodwill")) %>% rename(Name=Organization,Pass=1) %>% mutate(Organization="CNPP")
+}) %>% bind_rows()
+
+bus_rides_df <- bind_rows(bus_rides_may,bus_rides_june_aug)  
+
+rm(bus_rides_may,bus_rides_june_aug)
+
+b <- bus_rides_df %>%
+  group_by(mnth=floor_date(date(Month), unit="month")) %>%
+  summarise(total_transpo_rides=n(),total_transpo_riders=n_distinct(Pass)) %>%
+  filter(mnth>="2021-10-01", mnth<="2022-08-01") %>%
+  mutate(avg_rides_per_user=total_transpo_rides/total_transpo_riders) %>% .$avg_rides_per_user
+
+bus_fig <- bus_rides_df %>%
+  group_by(mnth=floor_date(date(Month), unit="month")) %>%
+  summarise(`Total rides`=n(),`Total riders`=-1*n_distinct(Pass)) %>%
+  filter(mnth>="2021-10-01", mnth<="2022-08-01") %>%
+  gather(key,value,-mnth) %>%
+  ggplot(aes(x=mnth,y=value, fill=key)) +
+  geom_bar(stat="identity")+ theme_minimal()+ 
+  theme(legend.title = element_blank(), axis.title = element_blank(), legend.position = "bottom") +
+  geom_text(aes(y=0,label = rep(round(b,0),2)), vjust = -0.2)+
+  scale_x_date(labels = date_format("%b-%y"))  + scale_y_continuous(limits = c(-100,2000), breaks = seq(-400,2000,400)) +
+  labs(title="Bus pass usage",
+       caption = paste0("Average rides per rider is shown at base of the bars","\n",
+                        "Total rides=",formatC(nrow(bus_rides_df), format="f", big.mark=",", digits=0),"\n",
+                        "Total unique riders=",formatC(n_distinct(bus_rides_df$Pass), format="f", big.mark=",", digits=0)))
+
+uber_fig+bus_fig + plot_layout(nrow=1)
+
+```
+
+Figure \@ref(fig:uber-bus-rides) shows the number of rides and users for uber and bus services. The program usage (the number of Uber and bus rides) has been increasing which is likely driven by higher enrollments in later months. The average number of rides per user is about 6-8 (shown at the base of the bars). Although there are fewer bus users  (Figure \@ref(fig:active-enrolees)), more bus rides are being used than Uber. This is consistent with observations from Goodwill in the previous evaluation. The average rides per user is also higher at around 18 for the most recent 3 months (shown at the base of the bars).
+
+# Survey Analysis
+
+## Weekly Survey
+
+```{r weekly-survey, echo=FALSE, message=FALSE,warning=FALSE,fig.align = "center", fig.height = 4, fig.width = 9, out.width="100%",fig.cap="How were they used and what would have happened if they were unavailable?", cache=TRUE}
+weekly_raw <- read_csv("data/surveys/CNPP Weekly Survey_09.06.2022.csv", skip=1)
+
+# cleaning - english
+weekly_raw_clean_eng <- weekly_raw %>% slice(-1) %>%
+  filter(`Would you like to take the survey in English or Spanish?`=="English")  %>%
+  filter(Finished=="True") %>% # # remove incomplete surveys
+  filter(`Response Type`=="IP Address") # # remove testing responses
+
+# cleaning - spanish
+weekly_raw_clean_spn <- weekly_raw %>% slice(-1) %>%
+  filter(str_detect(`Would you like to take the survey in English or Spanish?`,"Spanish")) %>%
+  filter(Finished=="True") %>% # # remove incomplete surveys
+  filter(`Response Type`=="IP Address") # # remove testing responses
+
+
+# delete repeated responses
+
+
+# delete responses that cannot be matched to enrolments
+
+# combine english and 
+
+
+# rides used where? - standard responses
+
+tot_resp <- sum(!is.na(weekly_raw_clean_eng$`Over the last 7 days, did you use your Uber rides to get to any of the following? Check all that apply - Selected Choice`)) +
+sum(!is.na(weekly_raw_clean_spn$`Durante los últimos 7 días, ¿uso usted sus viajes en Uber para ir a algunos de los siguientes lugares? Marque todo lo que aplique - Selected Choice`))
+
+recent_date <- weekly_raw$`Recorded Date` %>% ymd_hms() %>% max(na.rm = T) %>% format("%b %d, %Y")
+
+uber_rides_use <- bind_rows(
+  weekly_raw_clean_eng %>% select(uber_rides_use_1=22) %>% # "Over the last 7 days, did you use your Uber rides to get to any of the following? Check all that apply - Selected Choice"
+  separate(uber_rides_use_1, sep=",", into=c("a","b","c","d","e")) %>%
+  gather(key,uber_rides_use_1) ,
+  weekly_raw_clean_spn %>% select(uber_rides_use_1=`Durante los últimos 7 días, ¿uso usted sus viajes en Uber para ir a algunos de los siguientes lugares? Marque todo lo que aplique - Selected Choice`) %>%
+    separate(uber_rides_use_1,into=c("a","b","c","d","e","f","g","h","i"), sep = ",") %>%
+    gather(key,uber_rides_use_1) %>%
+    mutate(uber_rides_use_1=ifelse(uber_rides_use_1=="Cita medica", "Medical appointment",
+                                 ifelse(uber_rides_use_1=="Tienda de comestibles o banco de alimentos","Grocery store or food bank",
+                                        ifelse(uber_rides_use_1=="Otro","Other",
+                                               ifelse(uber_rides_use_1=="Trabajo o una feria de empleo/entrevista","Work or a job fair / interview",
+                                                      ifelse(uber_rides_use_1=="Entrenamiento/escuela/educación","Training / school / education",
+                                                             ifelse(uber_rides_use_1=="Lugar de cuidado de niños","Childcare facility",
+                                                                    ifelse(uber_rides_use_1=="Cita no medica","Non-medical appointment",NA))))))))
+  ) %>%
+  group_by(uber_rides_use_1) %>%
+  filter(!is.na(uber_rides_use_1)) %>%
+  summarise(obs=n()) %>% mutate(prop=obs/tot_resp)
+
+a <- uber_rides_use  %>%
+  arrange(desc(uber_rides_use_1)) %>% mutate(cum_prop=cumsum(prop)) %>%
+  ggplot(aes(x=uber_rides_use_1,y=prop, fill=uber_rides_use_1)) + geom_bar(stat="identity", position = position_dodge()) + 
+  geom_text(aes(vjust=-0.5,label = scales::percent(prop, accuracy = 1)),size = 3)+ 
+  theme_minimal() + theme(axis.title = element_blank(), legend.position = "none")+
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) +
+  labs(title="Used Uber rides to get to",
+       caption = paste0("Responses=",tot_resp,"\n","Most recent survey=",recent_date))
+
+
+# what would have happened if rides werent available?
+tot_resp <- sum(!is.na(weekly_raw_clean_eng$`Thinking about the places you used the free Uber rides to get to in the past 7 days, if the free Uber rides weren't available, which of the following would apply to you? (Select 1)`)) +
+  sum(!is.na(weekly_raw_clean_spn$`Pensando en los lugares a los que usó los viajes gratuitos para transporte en los últimos 7 días, si estos viajes gratuitos no estaban disponibles, ¿cuál de los siguientes describe mejor su situación? (Seleccione 1)*`))
+
+rides_unavailable_df <- bind_rows(
+  weekly_raw_clean_eng %>% select(rides_unavailable=24), # Thinking about the places you used the free Uber rides to get to in the past 7 days, if the free Uber rides weren't available, which of the following would apply to you? (Select 1)
+  weekly_raw_clean_spn %>%
+    select(rides_unavailable=`Pensando en los lugares a los que usó los viajes gratuitos para transporte en los últimos 7 días, si estos viajes gratuitos no estaban disponibles, ¿cuál de los siguientes describe mejor su situación? (Seleccione 1)*`) %>%
+    mutate(rides_unavailable=ifelse(rides_unavailable=="NO hubiera podido llegar a estos lugares","I would NOT have been able to get to most of these places",
+                                    ifelse(rides_unavailable=="Habría llegado a estos lugares de otra manera (como el autobús, viajar con alguien, caminar, andar en bicicleta)","I would have gotten to most of these places another way (such as the bus, ride from someone, walk, bike)",
+                                           ifelse(rides_unavailable=="Hubiera pagado el precio complete para llegar a estos lugares usando Uber, Lyft, o un taxi.","I would have paid full price to get to  using Uber, Lyft or a taxi",NA))))
+  
+)%>% # ,rides_use_2=23
+  group_by(rides_unavailable) %>% summarise(obs=n()) %>% mutate(prop=obs/sum(obs)) %>%
+  filter(!is.na(rides_unavailable))
+
+b <- rides_unavailable_df  %>%
+  filter(!is.na(rides_unavailable)) %>%
+  ggplot(aes(area = obs, fill = rides_unavailable, label=paste0(rides_unavailable,"\n","(",scales::percent(prop, accuracy = 1),")"))) +
+  geom_treemap() +
+  geom_treemap_text(colour = "white",
+                    place = "centre",
+                    size = 15, reflow=T)+ 
+  theme_minimal() + theme(legend.position = "none")+
+  labs(title="If Uber rides were unavailable",
+       caption = paste0("Responses=",tot_resp,"\n","Most recent survey=",recent_date))+ scale_fill_discrete(labels = function(x) str_wrap(x, width = 30))
+
+library(patchwork)
+a+b
+```
+
+A survey is given to all those who have used at least one Uber ride in the past week asking about the places visited using the rides and what would have happened in absence of the rides.  We are interested in knowing the places the rides were used to reach and the counterfactual scenario (when rides were not available) which may be used to estimate the cost savings for the enrollees.
+
+Figure \@ref(fig:weekly-survey) shows that a large majority of users used the rides to get to a medical appointment (`r percent(uber_rides_use$prop[unable_df[,1]=="Medical appointment"])`), and grocery store or food bank (`r percent(uber_rides_use$prop[unable_df[,1]=="Grocery store or food bank"])`), and work or a job fair/interview (`r percent(uber_rides_use$prop[unable_df[,1]=="Work or a job fair / interview"])`). This is consistent with the responses in the baseline survey responses (Figure \@ref(fig:difficult-access)) where these places and services are the same that enrollees had difficulty accessing due to transportation constraints. So the rides seem to be relaxing these constraints. This should also allay concerns about rides being used for non-essential purposes.
+
+Figure \@ref(fig:weekly-survey) shows that `r percent(rides_unavailable_df$prop[rides_unavailable_df$rides_unavailable=="I would NOT have been able to get to most of these places"])` respondents indicated that in absence of Uber rides, they would have been unable to get to places they needed to go. Thus, the program enabled individuals to go to places they wouldn't have gotten to otherwise. Also, that the program works as a compliment to existing modes without crowding out existing modes of transport.
+
+
+## Monthly Survey
+A monthly survey is given to all Uber and bus pass users asking them questions to calculate the transportation security index which indicates how easy it is for people to move around as needed.
+
+```{r monthly-survey, echo=FALSE, message=FALSE,warning=FALSE, cache=TRUE}
+cnpp_raw_df <- read_csv("data/surveys/CNPP Ride Guarantee Monthly Survey_09.06.2022.csv", skip = 1) %>% slice(-1) %>%
+  filter(Finished=="True")%>% mutate(`Start Date`=ymd_hms(`Start Date`)) %>%
+  mutate(mnth=floor_date(`Start Date`, unit = "month"))
+
+cnpp_raw_english <- cnpp_raw_df %>%
+  filter(`Would you like to take this survey in English or Spanish?`=="English") %>%
+  mutate(ph_no=sapply(str_extract_all(`Please enter your phone number.`,"[0-9]+"),function(x) paste(x,collapse=""))) %>% filter(nchar(ph_no)==10) # proper phone numbers
+  
+cnpp_raw_spanish <- cnpp_raw_df %>%
+  filter(`Would you like to take this survey in English or Spanish?`=="Spanish/Español") %>%
+  mutate(ph_no=sapply(str_extract_all(`Por favor escriba su número de teléfono si tiene uno.`,"[0-9]+"),function(x) paste(x,collapse=""))) %>% filter(nchar(ph_no)==10) # proper phone numbers
+
+
+tsi_baseline_df <- master_data %>%
+  select(ph_no,mnth,TSI1,TSI2,TSI3) %>%
+  mutate(TSI1=ifelse(TSI1=="Never",0,
+                     ifelse(TSI1=="Sometimes",1,
+                            ifelse(TSI1=="Often",2,NA))),
+         TSI2=ifelse(TSI2=="Never",0,
+                     ifelse(TSI2=="Sometimes",1,
+                            ifelse(TSI2=="Often",2,NA))),
+         TSI3=ifelse(TSI3=="Never",0,
+                     ifelse(TSI3=="Sometimes",1,
+                            ifelse(TSI3=="Often",2,NA))),
+         TSI_score=TSI1+TSI2+TSI3,
+         TSI_category=ifelse(TSI_score==0,"Transportation Secure",
+                             ifelse(TSI_score<=2,"Minimally Insecure",
+                                    ifelse(TSI_score<=4,"Moderately Insecure",
+                                           ifelse(TSI_score<=6,"Severly Insecure",NA))))) %>%
+  arrange(ph_no,mnth) %>% group_by(ph_no) %>% filter(row_number()==1) %>% ungroup() %>% # each phone number should only have one response in baseline
+  mutate(grp="baseline")
+
+tsi_monthly_df <- bind_rows(cnpp_raw_english %>%
+  select(ph_no,mnth,TSI1=22,TSI2=23,TSI3=24) %>%
+  mutate(TSI1=ifelse(TSI1=="Never",0,
+                     ifelse(TSI1=="Sometimes",1,
+                            ifelse(TSI1=="Often",2,NA))),
+         TSI2=ifelse(TSI2=="Never",0,
+                     ifelse(TSI2=="Sometimes",1,
+                            ifelse(TSI2=="Often",2,NA))),
+         TSI3=ifelse(TSI3=="Never",0,
+                     ifelse(TSI3=="Sometimes",1,
+                            ifelse(TSI3=="Often",2,NA))),
+         TSI_score=TSI1+TSI2+TSI3,
+         TSI_category=ifelse(TSI_score==0,"Transportation Secure",
+                             ifelse(TSI_score<=2,"Minimally Insecure",
+                                    ifelse(TSI_score<=4,"Moderately Insecure",
+                                           ifelse(TSI_score<=6,"Severly Insecure",NA))))),
+  cnpp_raw_spanish %>%
+    select(ph_no,mnth,TSI1=35,TSI2=36,TSI3=37) %>%
+    mutate(TSI1=ifelse(TSI1=="Nunca",0,
+                       ifelse(TSI1=="Algunas Veces",1,
+                              ifelse(TSI1=="A menudo",2,NA))),
+           TSI2=ifelse(TSI2=="Nunca",0,
+                       ifelse(TSI2=="Algunas Veces",1,
+                              ifelse(TSI2=="A menudo",2,NA))),
+           TSI3=ifelse(TSI3=="Nunca",0,
+                       ifelse(TSI3=="Algunas Veces",1,
+                              ifelse(TSI3=="A menudo",2,NA))),
+           TSI_score=TSI1+TSI2+TSI3,
+           TSI_category=ifelse(TSI_score==0,"Transportation Secure",
+                               ifelse(TSI_score<=2,"Minimally Insecure",
+                                      ifelse(TSI_score<=4,"Moderately Insecure",
+                                             ifelse(TSI_score<=6,"Severly Insecure",NA)))))
+  )%>%
+  group_by(ph_no,mnth) %>% filter(row_number()==1) %>% ungroup() %>% # each phone number should only have one response in each month
+  mutate(grp="monthly")
+
+baseline_mnthly_df <- bind_rows(tsi_baseline_df,tsi_monthly_df) %>%
+  group_by(ph_no) %>% filter(any(grp=="baseline")) %>% ungroup() %>% # keep only those for which have a baseline tsi
+  arrange(ph_no,mnth,grp) %>% group_by(ph_no,mnth) %>% filter(row_number()==1) %>% ungroup() %>% # if repeated in baseline and monthly, pick the baseline response
+  group_by(ph_no) %>% mutate(diff_mnth=interval(lag(mnth),mnth) %/% months(1),
+                             diff_mnth=ifelse(is.na(diff_mnth),0,diff_mnth),
+                             mnth_no=cumsum(diff_mnth)) %>% ungroup() %>%
+  filter(ph_no!="1231231234") # doesn't look like phone number
+
+# create panel data to track
+subset_bm_df <- baseline_mnthly_df %>%
+  mutate(mnth_no=as.integer(mnth_no)) %>%
+  group_by(ph_no) %>% filter(any(mnth_no==0)) %>%# must have responde to baseline
+  filter(any(mnth_no==1) | any(mnth_no==2)) %>% # must have responded in month 1 or 2
+  filter(any(mnth_no==3) | any(mnth_no==4)) %>%# must have responded in month 3 or 4
+  filter(any(mnth_no==5) | any(mnth_no==6))
+
+cut_off_mnth=6 # track responses until month 6
+
+small_subset_gm_df <- subset_bm_df %>%
+  filter(mnth_no<=cut_off_mnth) 
+
+```
+
+```{r TSI-time, echo=FALSE, message=FALSE,warning=FALSE,fig.align = "center", fig.height = 4, fig.width = 9, out.width="100%",fig.cap="TSI scores across time", cache=TRUE}
+small_subset_gm_df %>%
+  group_by(mnth_no) %>%
+  summarise(avg_tsi=mean(TSI_score,na.rm=T)) %>%
+  ggplot(aes(x=mnth_no, y=avg_tsi)) + geom_point() + ylim(c(0,6)) +
+  geom_smooth(method="lm", se=F) +
+  theme_minimal() +
+  labs(title=paste0("TSI score by months since enrollment"),
+       x="Month since enrollment (0=baseline)", y="TSI score",
+    caption = paste0("TSI scores for",n_distinct(small_subset_gm_df$ph_no[small_subset_gm_df$grp=="baseline"])," enrolees who responded to at least four monthly surveys"))+
+  annotate("rect", xmin = 0, xmax = cut_off_mnth, ymin = 0, ymax = 2,
+           alpha = .1,fill = "green")+
+  annotate("text", x=3, y= 1,label = "Minimally Insecure")+
+  annotate("rect", xmin = 0, xmax = cut_off_mnth, ymin = 2, ymax = 4,
+           alpha = .1,fill = "orange")+
+  annotate("text", x=3, y= 3,label = "Moderately Insecure")+
+  annotate("rect", xmin = 0, xmax = cut_off_mnth, ymin = 4, ymax = 6,
+           alpha = .1,fill = "red") +
+  annotate("text", x=3, y= 5,label = "Severely Insecure")
+```
+
+Figure \@ref(fig:TSI-time) shows how TSI scores vary across time for up to 6 months after enrolling in the program. The TSI score decreases, or respondents report feeling more transportation secure after enrolling in the program.^[Although we have `r nrow(master_data)` respondents to the baseline survey, very few among these have responded to the monthly surveys. To track responses of the same set of enrollees, we restrict that only those who have a baseline survey response and at least 3 monthly responses within the next 6 months are included in this sample. There are only `r n_distinct(small_subset_gm_df$ph_no[small_subset_gm_df$grp=="baseline"])` who satisfy this criterion. \@ref(fig:TSI-time2) shows how the TSI scores vary across time for all respondents. The trends are similar.]
+
+\clearpage
+
+# Qualitative Analysis
+```{r interviewees, warning=FALSE,echo=FALSE, cache=FALSE}
+int_demo_df <- read_excel("G:/My Drive/CNPP Interviews/interview coding/interview_v3.xlsx") %>%
+  select(org,age:income)
+```
+
+To better understand the program users, situations in which the rides are being used, and program impacts, in-depth interviews were conducted with `r nrow(int_demo_df)` program participants in May and July 2022.^[11 from REAL services and 6 from Hope Ministries.]. Figure \@ref(fig:demo-interviewees) shows the demographic characteristics of interviewees which look quite similar to those of all enrollees (Figure \@ref(fig:demo)) except that Black or African American enrollees are overrepresented.
+
+```{r demo-interviewees, warning=FALSE,echo=FALSE, fig.align = "center", fig.height = 4, fig.width = 11, out.width="100%",fig.cap="Demographics of Interviewees", cache=TRUE}
+int_demo_age <- int_demo_df %>%
+  filter(!is.na(age)) %>%
+  mutate(Age=ifelse(age>=65,"65 or older",
+                    ifelse(age>=55,"55-64",
+                           ifelse(age>=45,"45-54",
+                                  ifelse(age>=35,"35-44",
+                                         ifelse(age>=25,"25-34",
+                                                ifelse(age>=18,"18-24","under18"))))))) %>%
+  group_by(Age) %>%
+  summarise(obs=n()) %>% mutate(prop=obs/sum(obs)) %>%
+  mutate(Age=factor(Age,levels = c("65 or older","55-64","45-54","35-44","25-34","18-24","Under 18"))) %>%
+  arrange(desc(Age)) %>%
+  mutate(cum_prop=cumsum(prop)) %>%
+  ggplot(aes(x=1,y=prop, fill=Age)) + geom_bar(stat="identity") + 
+  geom_text(aes(x=1,y=cum_prop-prop/2,label = paste0(obs," (",scales::percent(prop, accuracy = 1),")")),size = 3)+
+  theme_minimal() + theme(axis.title = element_blank(), axis.text = element_blank()) +
+  labs(caption = paste0("Responses=",sum(!is.na(int_demo_df$age))))
+
+
+int_demo_gender <- int_demo_df %>%
+  group_by(Gender=gender) %>%
+  mutate(Gender=ifelse(Gender=="Male","Men",
+                       ifelse(Gender=="Female","Women",Gender))) %>%
+  filter(!is.na(Gender)) %>%
+  summarise(obs=n()) %>% mutate(prop=obs/sum(obs)) %>% 
+  mutate(Gender=factor(Gender,levels = c("Women","Men"))) %>% arrange(desc(Gender)) %>% mutate(cum_prop=cumsum(prop)) %>%
+  ggplot(aes(x=1,y=prop, fill=Gender)) + geom_bar(stat="identity") +
+  geom_text(aes(x=1,y=cum_prop-prop/2,label = paste0(obs," (",scales::percent(prop, accuracy = 1),")")),size = 3)+
+  theme_minimal() + theme(axis.title = element_blank(), axis.text = element_blank())+
+  labs(caption = paste0("Responses=",sum(!is.na(int_demo_df$gender))))
+
+int_demo_race <- int_demo_df %>%
+  group_by(Race=race)  %>%
+  mutate(Race=ifelse(Race=="Black","Black or African American",
+                       ifelse(Race=="White","White or Caucasian",Race))) %>%
+  filter(!is.na(Race)) %>%
+  summarise(obs=n()) %>% mutate(prop=obs/sum(obs)) %>%
+  mutate(Race=factor(Race,levels = c("A race/ethnicity not listed here","Native American or Alaskan Native","Asian or Pacific Islander","Multiracial or Biracial","Hispanic or Latino","White or Caucasian","Black or African American"))) %>%
+  arrange(desc(Race)) %>% mutate(cum_prop=cumsum(prop)) %>%
+  ggplot(aes(x=1,y=prop, fill=Race)) + geom_bar(stat="identity") + 
+  geom_text(aes(x=1,y=cum_prop-prop/2,label = paste0(obs," (",scales::percent(prop, accuracy = 1),")")),size = 3)+ 
+  theme_minimal() + theme(axis.title = element_blank(), axis.text = element_blank())+
+  labs(caption = paste0("Responses=",sum(!is.na(int_demo_df$race))))
+
+int_demo_inc <- int_demo_df %>%
+  filter(!is.na(income)) %>%
+  mutate(Income=ifelse(income<10000 | income=="Less than $10,000","Less than $10,000",
+                       ifelse(income<20000,"$10,000 - $19,999",
+                              ifelse(income<30000,"$20,000 - $29,999",
+                                     ifelse(income<40000,"$30,000 - $39,999",
+                                            "$40,000+"))))) %>%
+  group_by(Income)  %>%
+  filter(!is.na(Income)) %>%
+  summarise(obs=n()) %>% mutate(prop=obs/sum(obs)) %>%
+  mutate(Income=factor(Income,levels = c("$40,000+","$30,000 - $39,999","$20,000 - $29,999","$10,000 - $19,999","Less than $10,000"))) %>%
+  arrange(desc(Income)) %>% mutate(cum_prop=cumsum(prop)) %>%
+  ggplot(aes(x=1,y=prop, fill=Income)) + geom_bar(stat="identity") + 
+  geom_text(aes(x=1,y=cum_prop-prop/2,label = paste0(obs," (",scales::percent(prop, accuracy = 1),")")),size = 3)+
+  theme_minimal() + theme(axis.title = element_blank(), axis.text = element_blank())+
+  labs(caption = paste0("Responses=",sum(!is.na(int_demo_df$income))))
+
+int_demo_age+int_demo_gender+int_demo_inc+int_demo_race+ plot_layout(nrow=1)
+```
+
+Few takeaways from the interviews
+
+1. The CNPP program is serving an especially vulnerable population 
+
+    The CNPP program users are those utilizing the services of City non-profits which is a very vulnerable population. This is made clear by looking at the income distribution of enrollees (Figure \@ref(fig:demo)) where 85% of the enrollees have an annual income of less than $10,000 per year. During the interviews, we understood that a majority of respondents have no source of income because they do not have a job and looking for one or are dependent on social security or disability insurance. A number of them have health issues that prevent them from getting regular employment. Not surprisingly, many do not have stable housing and live at non-profit locations. Others who have housing are utilizing non-profit services such as rental and utility assistance. 
+
+:::::: {.cols data-latex=""}
+
+::: {.col data-latex="{0.49\textwidth}"}
+> "My dad helped me this last time to go to uh, what is it called? Sam's Club and buy the bigger packages of things so that I won't have to go to the store, you know, and and spend on toilet papers and stuff so he helped me out like that and then that way I have more money money for transportation."
+:::
+
+::: {.col data-latex="{0.02\textwidth}"}
+\ 
+<!-- an empty Div (with a white space), serving as
+a column separator -->
+:::
+
+::: {.col data-latex="{0.49\textwidth}"}
+> "If you have a choice between getting groceries, are getting toiletries and you know catching the bus you're like Oh my goodness. I have walked like 4 four blocks to go and get some toiletries and bring them back to my house [to avoid paying for the bus]."
+
+:::
+::::::
+
+> "When I can't afford it [transportation], I might, you know, skip out a couple of days stay at home or even go to the closest places that I can ride my bike."
+
+2. This population has limited means of transportation
+    
+    Almost no one has a car, a majority do not even have a driver's license. Given their financial vulnerability, getting a car is the least of their priorities. Pubic transport usage is also restricted sometimes due to health issues. For example, one respondent mentioned that he has to carry an oxygen tank with him. Another respondent mentioned that she suffers from Schizophrenia and is not very comfortable traveling on the bus. For one mom, traveling with her child is difficult on the bus. Consequently, getting a ride from friends and family members is often the only option in addition to walking.
+
+
+> "I had to walk many times you know, without having any money to pay for it [transportation]. I had to walk to location."
+
+> "[Before the bus pass] I was paying people to take me back and forth and then sometimes they would come and sometimes they wouldn't, and sometimes they'll take your money and do what they wanna do with it. I was tired of giving people my money."
+
+3. The current mode of transport is expensive, and stressful
+    
+    Rides from friends and family members typically involve payments which could be a significant financial burden in addition to the emotional stress of asking for rides.
+
+> "The last time I got a ride from a friend we went to a Housing Authority we went to voc rehab, and to the food stamp office and to Walmart. She charges me like $25 when I need her to help me go some places or more depending on how many places I got to go. It gets pretty pricey. I pay big time [to the friend who gives rides] and the thing is it is kind of a hardship. Because I get Social Security disability. I don't work because of disabilities. And you know, paying that kind of money out of my check has been kind of stressful. Has been stressful for real."
+
+4. Their travel needs are irregular but there are few commonalities
+    
+    Since this population is often without regular employment, many do not need transportation every day. The transportation needs are one-off rides. Consistent with the weekly survey responses (Figure \@ref(fig:difficult-access)), the two most common needs are attending doctor’s appointments and grocery stores.
+
+5. Higher bus pass usage is because of familiarity with the bus system 
+    
+    Most of the interview respondents are very comfortable, and almost prefer using the bus over rideshare. Mostly because they have experience traveling by bus. Some also expressed unfamiliarity with smartphones as a constraint for using rideshare and digital bus pass. Also, a bus with longer travel times works well for occasional visits to grocery stores and doctors visits.
+
+6. The city and nonprofits have done a tremendous job of distributing the bus pass
+    
+    All interview respondents said it was very straightforward to get the bus pass and renew it when needed. Also, very positive about solving minor problems to get the pass if they arise.
+    
+> "[Lynn] She's a sweetheart. I like her a lot. She's very, very nice to me and has a very, very good demeanor. She won't escalate a problem but deescalates if anything and then makes me feel better about what I'm doing and you know what I'm saying. Not really taking anybody side and she's doing what she can to straighten things off of me and I appreciate her a lot."
+
+\newpage
+
+# Conclusion and recommendations
+
+1. The program has enabled individuals to access places unaccessible in program's access
+    
+    Figure \@ref(fig:weekly-survey) shows that `r percent(rides_unavailable_df$prop[rides_unavailable_df$rides_unavailable=="I would NOT have been able to get to most of these places"])` respondents indicated that in absence of Uber rides, they would have been unable to get to places they needed to go. Thus, the program enabled individuals to go to places they wouldn't have gotten to otherwise. Also, that the program works as a compliment to existing modes without crowding out existing modes of transport.
+
+2. The program saves money, reduces stress, makes users feel independent, get a job, complete education
+    
+    Not having to ask someone for rides and pay them saves money as well as reduced stress. Another channel for stress reduction is a decrease in worrying about how to get to places since the program guarantees a bus or rideshare. Having a bus pass also makes them feel independent as they do not have to rely on friends or non-profits for rides. For some interviewees, the program acts as a direct cost subsidy without affecting their usual mode of travel. These interviewees were using the bus before the program, and the program saves them money that they were spending on bus tickets. A few participants also reported being able to search for jobs using the program and felt confident about keeping the job knowing that they have the bus pass. One participant uses the bus pass to get to classes to get a GED certificate which is likely to have long-run effects.
+
+> "Many times prior to the program it would be hard to get food. Because they have pantries where you can get food and prior to the program, it would be hard to go because you may need a person to give you a ride. And then you know, not having a bus pass, you can't carry it. You can't catch the bus. But since the program I was able to. Get food, make it to the places where they give food and I'm able to get on the bus with the food so the program has really been very helpful to it."
+
+3. The program has spillover effects on broader community impacts
+    
+    A common theme across interviews was that having access to the program had spillover effects on the broader community. For example, many participants said that they can meet friends and family members more often with the program. For some, since they no longer have to get rides from family members or non-profits, that frees up some of their time.
+
+4. The CNPP program complements the work-travel subsidy program 
+
+    The CNPP program and the work-travel subsidy program differs in terms of their target population and intended use od the rides.
+    
+    Those enrolled in the work-travel subsidy program are workers who have regular employment and the rides are intended to be used to travel to and from work. While those enrolled in the CNPP program are individuals working with social services providers and the rides are not restrcited by location. Taken together, both programs complement each other by targeting different populations and intended use. Additionally, the CNPP program complements the services of non-profit partners helping them focus on other issues.
+
+## Recommendations
+1. The program may not solve all the problems, but it does go a long way.
+    
+    The program does not solve all the transportation issues for the participants. For example, The limited Uber rides are insufficient for one participant who works at night shift to get to work. One participant mentioned that she knows someone who takes the last bus available to get to work, even when it means reaching the workplace a couple of hours in advance.
+
+## Minor issues {-}
+1.	One person mentioned that Uber vouchers are difficult to use because he has to first use the payment method as a checking account. Then switch to voucher once the ride is dispatched. Though this experience was not shared by all users. This is only applicable to rides scheduled in advance.^[The process has beenlaid out here: https://www.commuterstrust.com/uberscheduling]
+2.	One person said he missed the voucher thinking that the text message was related to the survey. Any way to avoid this? Maybe send vouchers from a different number and a survey from another number?
+3.	How to use Uber app/voucher training: Some participants mentioned that they would like to try out using the Uber app but were unsure how to learn to do so. The city can create a training video to show how to use the app and monthly voucher.^[Similar to the video here: https://www.commuterstrust.com/uee]
+4.	The city can study if they want to distribute a limited number of weekly or daily passes: Given the intermittent travel requirements, some may need the bus only for a few days of the week. For them, a daily/ weekly pass may suffice. This can reduce the bus pass expense.
+
+
+
+\newpage
+
+# References
+
+<div id="refs"></div>
+
+\newpage
+
+# Appendix
+
+```{r rides-by-org, echo=FALSE, message=FALSE,warning=FALSE,fig.align = "center", fig.height = 4, fig.width = 9, out.width="100%",fig.cap="Uber rides by Organization"}
+Uber_CNPP %>%
+  group_by(mnth=as.Date(floor_date(`Transaction Timestamp (UTC)`, unit="month"))) %>% filter(mnth>="2021-10-01", mnth<="2022-07-01") %>%
+  mutate(Organization=ifelse(Organization=="Real Services","REAL Services",Organization),
+         Organization=ifelse(Organization=="YWCA","YWCA North Central Indiana",Organization)) %>%
+  group_by(Organization) %>%
+  summarise(total_uber_rides=n()) %>%
+  ggplot(aes(area = total_uber_rides, fill = Organization, label=paste0(Organization,"\n","(",total_uber_rides,")"))) +
+  geom_treemap() +
+  geom_treemap_text(colour = "white",
+                    place = "centre",
+                    size = 15, reflow=T)+ 
+  theme_minimal() + theme(legend.position = "none")+ 
+  labs(title=paste("Total Uber Rides by Organization"),
+       caption = paste("Total rides from","Oct-2022","through","July-2022 =",nrow(Uber_CNPP)))
+
+bus_rides_df %>%
+  group_by(mnth=floor_date(date(Month), unit="month")) %>% filter(mnth>="2021-10-01", mnth<="2022-07-01") %>%
+  group_by(Name) %>%
+  summarise(total_transpo_rides=n()) %>%
+  ggplot(aes(area = total_transpo_rides, fill = Name, label=paste0(Name,"\n","(",total_transpo_rides,")"))) +
+  geom_treemap() +
+  geom_treemap_text(colour = "white",
+                    place = "centre",
+                    size = 15, reflow=T)+ 
+  theme_minimal() + theme(legend.position = "none")+ 
+  labs(title=paste("Total Transpo rides by Organization"),
+       caption = paste("Total rides from","Oct-2022","through","May-2022 =",nrow(bus_rides_df)))
+```
+
+
+```{r active-enrolees, echo=FALSE, message=FALSE,warning=FALSE,fig.align = "center", fig.height = 4, fig.width = 9, out.width="100%",fig.cap="Active enrolees each month"}
+rs_bus_clean %>%
+  group_by(mnth) %>%
+  summarise(`Uber users`=sum(!is.na(rs_voucher)), `Bus pass users`=sum(!is.na(bus_pass_no))) %>% ungroup() %>%
+  select(mnth:`Bus pass users`) %>%
+  gather(key,value,-mnth) %>%
+  ggplot(aes(x=mnth,y=value, group=key, fill=key)) + geom_bar(stat="identity", position = position_dodge2()) + 
+  scale_x_date(labels = date_format("%b-%y")) +
+  theme_minimal() + theme(legend.position = "bottom")+
+  labs(x="Month", y="Users",
+       caption = paste0("Responses=",nrow(distinct(rs_bus_clean,full_name,org))))
+  
+```
+
+```{r TSI-time2, echo=FALSE, message=FALSE,warning=FALSE,fig.align = "center", fig.height = 4, fig.width = 9, out.width="100%",fig.cap="TSI across time for all respondents"}
+baseline_mnthly_df %>%
+  filter(mnth_no<=6) %>%
+    group_by(mnth_no) %>%
+    summarise(avg_tsi=mean(TSI_score,na.rm=T)) %>%
+    ggplot(aes(x=mnth_no, y=avg_tsi)) + geom_point() + ylim(c(0,6)) +
+    geom_smooth(method="lm", se=F) +
+    theme_minimal() +
+    labs(title=paste0("TSI score by months since enrollment"),
+         x="Month since enrollment (0=baseline)", y="TSI score",
+         caption = paste0("TSI scores for",n_distinct(baseline_mnthly_df$ph_no[baseline_mnthly_df$grp=="baseline"])," enrolees who responded to at least four monthly surveys"))+
+    annotate("rect", xmin = 0, xmax = cut_off_mnth, ymin = 0, ymax = 2,
+             alpha = .1,fill = "green")+
+    annotate("text", x=3, y= 1,label = "Minimally Insecure")+
+    annotate("rect", xmin = 0, xmax = cut_off_mnth, ymin = 2, ymax = 4,
+             alpha = .1,fill = "orange")+
+    annotate("text", x=3, y= 3,label = "Moderately Insecure")+
+    annotate("rect", xmin = 0, xmax = cut_off_mnth, ymin = 4, ymax = 6,
+             alpha = .1,fill = "red") +
+    annotate("text", x=3, y= 5,label = "Severely Insecure")
+```
+
+```{r tsi-fig-race, echo=FALSE, fig.align = "center", fig.height = 5, fig.width = 8, out.width="70%",fig.cap="Transportation Situation of Enrolees",cache=TRUE}
+tsi_df %>%
+  group_by(Race,TSI=TSI_category) %>%
+  filter(!is.na(TSI), !is.na(Race)) %>%
+  summarise(obs=n()) %>% mutate(prop=obs/sum(obs))%>%
+  mutate(TSI=factor(TSI,levels = c("Severely Insecure","Moderately Insecure","Minimally Insecure","Transportation Secure"))) %>%
+  arrange(desc(TSI)) %>%
+  mutate(cum_prop=cumsum(prop)) %>%
+  ggplot(aes(x=Race,y=prop, fill=TSI)) + geom_bar(stat="identity") + 
+  geom_text(aes(x=Race,y=cum_prop-prop/2,label = scales::percent(prop, accuracy = 1)),size = 3)+
+  theme_minimal() + 
+  labs(caption = paste0("Responses=",sum(!is.na(tsi_df$`TSI_category`)))) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) 
+```
