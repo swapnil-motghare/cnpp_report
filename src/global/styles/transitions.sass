@@ -1,0 +1,61 @@
+.fade-enter-active, .fade-leave-active
+  transition: opacity .15s
+
+.fade-med-enter-active, .fade-med-leave-active
+  transition: opacity .30s
+
+.fade-slow-enter-active, .fade-slow-leave-active
+  transition: opacity 1.15s
+
+.fade-enter-from, .fade-leave-to, .fade-med-enter-from, .fade-med-leave-to, .fade-slow-enter-from, .fade-slow-leave-to
+  opacity: 0
+
+.slide-right-enter-active, .slide-right-leave-active
+  transition: transform .15s
+
+.slide-right-enter-from, .slide-right-leave-to
+  transform: translateX(-100%)
+
+.from-bottom-enter-active, .from-bottom-leave-active
+  transition: all .5s
+
+.from-bottom-enter-from, .from-bottom-leave-to
+  transform: translateY(50%)
+  opacity: 0
+
+.from-right-enter-active, .from-right-leave-active
+  transition: all .2s
+
+.from-right-enter-from, .from-right-leave-to
+  transform: translateX(100%)
+
+.from-top-enter-active, .from-top-leave-active
+  transition: all .5s
+
+.from-top-enter-from, .from-top-leave-to
+  transform: translateY(-50%)
+  opacity: 0
+
+.slide-left-enter-active, .slide-left-leave-active
+  transition: transform .5s
+
+.slide-left-enter-from
+  transform: translateX(100%)
+
+.slide-left-leave-to
+  transform: translateX(-100%)
+
+.slide-right-enter-active, .slide-right-leave-active
+  transition: transform .5s
+
+.slide-right-enter-from
+  transform: translate(-100%)
+
+.slide-right-leave-to
+  transform: translate(100%)
+
+.expand-height-enter-active, .expand-height-leave-active
+  transition: all .5s
+
+.expand-height-enter-from, .expand-height-leave-to
+  transform: scaleY(0)
